@@ -10,7 +10,7 @@ func TestShouldReturnAllSevenLetterLongWords(t *testing.T) {
 	words := []string{"Ben", "Dale", "cars", "glasses", "cards", "drivers", "called"}
 
 	// When
-	extractedWords := extractWordsOfLength(7, words)
+	extractedWords := extractPasswordsOfLength(7, words)
 
 	// Then
 	assert.Equal(t, []string{"glasses", "drivers"}, extractedWords, "Error. Should have only extracted seven letter words.")
@@ -21,7 +21,7 @@ func TestShouldReturnAnyFiveWordsAtRandomFromGivenListOfWords(t *testing.T) {
 	words := []string{"Ben", "Dale", "cars", "glasses", "cards", "drivers", "called"}
 
 	// When
-	result := extractSubsetOfWordsAtRandom(5, words)
+	result := extractSubsetOfPasswordsAtRandom(5, words)
 
 	// Then
 	assert.Equal(t, 5, len(result), "Error. Should have returned five words.")
@@ -32,7 +32,7 @@ func TestShouldReturnTrueIfWordExistsInGivenSlice(t *testing.T) {
 	slice := []string{"hello", "world"}
 
 	// When
-	result := stringArrayContains("hello", slice)
+	result := stringSliceContains("hello", slice)
 
 	// Then
 	assert.Equal(t, true, result, "Error. Should have returned true.")
@@ -43,7 +43,7 @@ func TestShouldReturnFalseIfWordDoesNotExistInGivenSlice(t *testing.T) {
 	slice := []string{"Hello", "World"}
 
 	// When
-	result := stringArrayContains("cards", slice)
+	result := stringSliceContains("cards", slice)
 
 	// Then
 	assert.Equal(t, false, result, "Error. Should have returned false.")
@@ -78,7 +78,7 @@ func TestShouldConvertAllLowercaseLettersInCollectionOfWordsToUpperCase(t *testi
 	words := []string{"ben", "Dale"}
 
 	// When
-	convertWordsToUpperCase(words)
+	convertStringSliceToUpperCase(words)
 
 	// Then
 	assert.Equal(t, []string{"BEN", "DALE"}, words, "Error. Should have converted all words to uppercase.")

@@ -23,7 +23,7 @@ const numberOfPasswords int = 10 // Number of passwords to guess from
  */
 func StartGame(filename string, connection net.Conn) {
 	defer connection.Close()
-	wordList := loadWordsFromDictionaryFile(filename)
+	wordList := loadPasswordsFromDictionaryFile(filename)
 
 	player := player{0} // Setup new player
 
@@ -54,10 +54,10 @@ func StartGame(filename string, connection net.Conn) {
  * right answer.
  */
 func buildRound(attempts int, wordLength int, wordList []string) round {
-	certainLengthWords := extractWordsOfLength(wordLength, wordList)
-	possiblePasswords := extractSubsetOfWordsAtRandom(numberOfPasswords, certainLengthWords)
-	convertWordsToUpperCase(possiblePasswords)
-	correctWord := extractSubsetOfWordsAtRandom(1, possiblePasswords)[0]
+	certainLengthWords := extractPasswordsOfLength(wordLength, wordList)
+	possiblePasswords := extractSubsetOfPasswordsAtRandom(numberOfPasswords, certainLengthWords)
+	convertStringSliceToUpperCase(possiblePasswords)
+	correctWord := extractSubsetOfPasswordsAtRandom(1, possiblePasswords)[0]
 	return round{attempts, possiblePasswords, correctWord}
 }
 
@@ -79,6 +79,7 @@ func buildRound(attempts int, wordLength int, wordList []string) round {
 func playRound(player *player, round round, connection net.Conn) {
 	printRoundHeader(connection)
 	printPossiblePasswords(round.possiblePasswords, connection)
+	connection.Write([]byte("\n----------------------------------------\n"))
 	for i := round.attemptsLeft; i > 0; i-- {
 		connection.Write([]byte("\n" + strconv.Itoa(i) + " ATTEMPT(S) LEFT")) // Print number of attempts left
 		connection.Write([]byte("\nENTER PASSWORD: "))
@@ -124,17 +125,10 @@ func getUserInput(connection net.Conn) string {
 
 // Returns true if attempt is in list of provided passwords
 func isValidAttempt(attempt string, possiblePasswords []string) bool {
-	if stringArrayContains(attempt, possiblePasswords) {
+	if stringSliceContains(attempt, possiblePasswords) {
 		return true
 	}
 	return false
-}
-
-// Iterates over a string slice and converts all passwords to uppercase
-func convertWordsToUpperCase(passwords []string) {
-	for i := 0; i < len(passwords); i++ {
-		passwords[i] = strings.ToUpper(passwords[i])
-	}
 }
 
 // Prints the all of the possible passwords within a given round
@@ -142,7 +136,6 @@ func printPossiblePasswords(possiblePasswords []string, connection net.Conn) {
 	for i := 0; i < len(possiblePasswords); i++ {
 		connection.Write([]byte(possiblePasswords[i] + "\n"))
 	}
-	connection.Write([]byte("\n----------------------------------------\n"))
 }
 
 // Calculates the number of correct letters the user has. Iterates over each letter in word.
@@ -159,33 +152,34 @@ func calculateNumberOfCorrectLetters(attempt string, correctPassword string) int
 }
 
 // Extracts all words from given word list that are a given length
-func extractWordsOfLength(length int, words []string) []string {
-	extractedWords := []string{}
+func extractPasswordsOfLength(length int, words []string) []string {
+	extractedPasswords := []string{}
 	for i := 0; i < len(words); i++ {
 		if len(words[i]) == length {
-			extractedWords = append(extractedWords, words[i])
+			extractedPasswords = append(extractedPasswords, words[i])
 		}
 	}
-	return extractedWords
+	return extractedPasswords
 }
 
 // Extracts a given number of words from provided list of words
-func extractSubsetOfWordsAtRandom(amount int, words []string) []string {
-	extractedWords := []string{}
+func extractSubsetOfPasswordsAtRandom(amount int, words []string) []string {
+	extractedPasswords := []string{}
 	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < amount; i++ {
-		possibleWord := words[rand.Intn(len(words))]
-		if stringArrayContains(possibleWord, extractedWords) {
+		possiblePassword := words[rand.Intn(len(words))]
+		if stringSliceContains(possiblePassword, extractedPasswords) {
 			i--
+			continue
 		} else {
-			extractedWords = append(extractedWords, possibleWord)
+			extractedPasswords = append(extractedPasswords, possiblePassword)
 		}
 	}
-	return extractedWords
+	return extractedPasswords
 }
 
 // returns true if word is already in slice of words
-func stringArrayContains(word string, words []string) bool {
+func stringSliceContains(word string, words []string) bool {
 	for i := 0; i < len(words); i++ {
 		if word == words[i] {
 			return true
@@ -194,8 +188,15 @@ func stringArrayContains(word string, words []string) bool {
 	return false
 }
 
+// Iterates over a string slice and converts all passwords to uppercase
+func convertStringSliceToUpperCase(slice []string) {
+	for i := 0; i < len(slice); i++ {
+		slice[i] = strings.ToUpper(slice[i])
+	}
+}
+
 // Loads words from dictionary file and returns as string slice
-func loadWordsFromDictionaryFile(filename string) []string {
+func loadPasswordsFromDictionaryFile(filename string) []string {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		panic(err)
