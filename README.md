@@ -20,6 +20,3 @@ e.g.
 ~~~~
 telnet 192.168.0.15 2160
 ~~~~
-
-###TELNET SCREENSHOT###
-!(telnetscreen.png)
