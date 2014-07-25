@@ -10,7 +10,7 @@ func TestShouldReturnAllSevenLetterLongWords(t *testing.T) {
 	words := []string{"Ben", "Dale", "cars", "glasses", "cards", "drivers", "called"}
 
 	// When
-	extractedWords := extractPasswordsOfLength(7, words)
+	extractedWords := extractStringsOfLength(7, words)
 
 	// Then
 	assert.Equal(t, []string{"glasses", "drivers"}, extractedWords, "Error. Should have only extracted seven letter words.")
@@ -21,7 +21,7 @@ func TestShouldReturnAnyFiveWordsAtRandomFromGivenListOfWords(t *testing.T) {
 	words := []string{"Ben", "Dale", "cars", "glasses", "cards", "drivers", "called"}
 
 	// When
-	result := extractSubsetOfPasswordsAtRandom(5, words)
+	result := extractSubsetOfStringsAtRandom(5, words)
 
 	// Then
 	assert.Equal(t, 5, len(result), "Error. Should have returned five words.")
@@ -78,7 +78,7 @@ func TestShouldConvertAllLowercaseLettersInCollectionOfWordsToUpperCase(t *testi
 	words := []string{"ben", "Dale"}
 
 	// When
-	convertStringSliceToUpperCase(words)
+	convertStringsInSliceToUpperCase(words)
 
 	// Then
 	assert.Equal(t, []string{"BEN", "DALE"}, words, "Error. Should have converted all words to uppercase.")

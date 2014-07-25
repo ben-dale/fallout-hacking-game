@@ -9,9 +9,10 @@ import (
 	"time"
 )
 
-const attemptsPerRound int = 4   // Amount of attempts to guess the password the player has
-const lengthOfPassword int = 7   // Length of the passwords
-const numberOfPasswords int = 10 // Number of passwords to guess from
+const attemptsPerRound int = 4                            // Amount of attempts to guess the password the player has
+const lengthOfPassword int = 7                            // Length of the passwords
+const numberOfPasswords int = 10                          // Number of passwords to guess from
+const randomCharacters string = ";()[]*&^$.-=<>+#_!?@'/|" // Random characters to choose from when displaying passwords
 
 /**
  * Starts the game. Builds up a new player struct and round struct.
@@ -23,7 +24,7 @@ const numberOfPasswords int = 10 // Number of passwords to guess from
  */
 func StartGame(filename string, connection net.Conn) {
 	defer connection.Close()
-	wordList := loadPasswordsFromDictionaryFile(filename)
+	wordList := loadStringsFromDisctionaryFile(filename)
 
 	player := player{0} // Setup new player
 
@@ -54,10 +55,10 @@ func StartGame(filename string, connection net.Conn) {
  * right answer.
  */
 func buildRound(attempts int, wordLength int, wordList []string) round {
-	certainLengthWords := extractPasswordsOfLength(wordLength, wordList)
-	possiblePasswords := extractSubsetOfPasswordsAtRandom(numberOfPasswords, certainLengthWords)
-	convertStringSliceToUpperCase(possiblePasswords)
-	correctWord := extractSubsetOfPasswordsAtRandom(1, possiblePasswords)[0]
+	certainLengthWords := extractStringsOfLength(wordLength, wordList)
+	possiblePasswords := extractSubsetOfStringsAtRandom(numberOfPasswords, certainLengthWords)
+	convertStringsInSliceToUpperCase(possiblePasswords)
+	correctWord := extractSubsetOfStringsAtRandom(1, possiblePasswords)[0]
 	return round{attempts, possiblePasswords, correctWord}
 }
 
@@ -77,7 +78,9 @@ func buildRound(attempts int, wordLength int, wordList []string) round {
  * print ENTRY DENIED and print 0/n letters in correct place.
  */
 func playRound(player *player, round round, connection net.Conn) {
-	printRoundHeader(connection)
+	connection.Write([]byte("\n----------------------------------------\n"))
+	connection.Write([]byte("\nROBCO INDUSTRIES (TM) TERMALINK PROTOCOL\n"))
+	connection.Write([]byte("\nENTER PASSWORD NOW\n\n"))
 	printPossiblePasswords(round.possiblePasswords, connection)
 	connection.Write([]byte("\n----------------------------------------\n"))
 	for i := round.attemptsLeft; i > 0; i-- {
@@ -106,13 +109,6 @@ func printPlayerScore(player player, connection net.Conn) {
 	connection.Write([]byte("\nSCORE:" + strconv.Itoa(player.score) + "\n"))
 }
 
-// Prints the round's header
-func printRoundHeader(connection net.Conn) {
-	connection.Write([]byte("\n----------------------------------------\n"))
-	connection.Write([]byte("\nROBCO INDUSTRIES (TM) TERMALINK PROTOCOL\n"))
-	connection.Write([]byte("\nENTER PASSWORD NOW\n\n"))
-}
-
 // Returns user attempt as a string
 func getUserInput(connection net.Conn) string {
 	var input [512]byte
@@ -134,8 +130,30 @@ func isValidAttempt(attempt string, possiblePasswords []string) bool {
 // Prints the all of the possible passwords within a given round
 func printPossiblePasswords(possiblePasswords []string, connection net.Conn) {
 	for i := 0; i < len(possiblePasswords); i++ {
-		connection.Write([]byte(possiblePasswords[i] + "\n"))
+		charsToPrepend, charsToAppend := generateRandomCharacterStrings()
+		connection.Write([]byte(charsToPrepend + possiblePasswords[i] + charsToAppend + "\n"))
 	}
+}
+
+// Each password, when displayed, is surrounded by random characters.
+// Each word is surrounded by 10 characters
+func generateRandomCharacterStrings() (string, string) {
+	rand.Seed(time.Now().UnixNano())
+	noOfCharsToPrepend := rand.Intn(10)
+	noOfCharsToAppend := 10 - noOfCharsToPrepend
+
+	charsToPrepend := ""
+	for i := 0; i < noOfCharsToPrepend; i++ {
+		charsToPrepend += string(randomCharacters[rand.Intn(len(randomCharacters))])
+	}
+
+	charsToAppend := ""
+	for i := 0; i < noOfCharsToAppend; i++ {
+		charsToAppend += string(randomCharacters[rand.Intn(len(randomCharacters))])
+	}
+
+	return charsToAppend, charsToPrepend
+
 }
 
 // Calculates the number of correct letters the user has. Iterates over each letter in word.
@@ -151,34 +169,34 @@ func calculateNumberOfCorrectLetters(attempt string, correctPassword string) int
 	return correctLetterCount
 }
 
-// Extracts all words from given word list that are a given length
-func extractPasswordsOfLength(length int, words []string) []string {
-	extractedPasswords := []string{}
-	for i := 0; i < len(words); i++ {
-		if len(words[i]) == length {
-			extractedPasswords = append(extractedPasswords, words[i])
+// Extracts all strings from given string slice that are a certain length
+func extractStringsOfLength(length int, strings []string) []string {
+	extractedStrings := []string{}
+	for i := 0; i < len(strings); i++ {
+		if len(strings[i]) == length {
+			extractedStrings = append(extractedStrings, strings[i])
 		}
 	}
-	return extractedPasswords
+	return extractedStrings
 }
 
-// Extracts a given number of words from provided list of words
-func extractSubsetOfPasswordsAtRandom(amount int, words []string) []string {
-	extractedPasswords := []string{}
+// Extracts a given number of strings from provided list of strings
+func extractSubsetOfStringsAtRandom(amount int, strings []string) []string {
+	extractedStrings := []string{}
 	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < amount; i++ {
-		possiblePassword := words[rand.Intn(len(words))]
-		if stringSliceContains(possiblePassword, extractedPasswords) {
+		possibleString := strings[rand.Intn(len(strings))]
+		if stringSliceContains(possibleString, extractedStrings) {
 			i--
 			continue
 		} else {
-			extractedPasswords = append(extractedPasswords, possiblePassword)
+			extractedStrings = append(extractedStrings, possibleString)
 		}
 	}
-	return extractedPasswords
+	return extractedStrings
 }
 
-// returns true if word is already in slice of words
+// returns true if string is already in slice of strings
 func stringSliceContains(word string, words []string) bool {
 	for i := 0; i < len(words); i++ {
 		if word == words[i] {
@@ -188,15 +206,15 @@ func stringSliceContains(word string, words []string) bool {
 	return false
 }
 
-// Iterates over a string slice and converts all passwords to uppercase
-func convertStringSliceToUpperCase(slice []string) {
+// Iterates over a string slice and converts all strings to uppercase
+func convertStringsInSliceToUpperCase(slice []string) {
 	for i := 0; i < len(slice); i++ {
 		slice[i] = strings.ToUpper(slice[i])
 	}
 }
 
 // Loads words from dictionary file and returns as string slice
-func loadPasswordsFromDictionaryFile(filename string) []string {
+func loadStringsFromDisctionaryFile(filename string) []string {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		panic(err)
