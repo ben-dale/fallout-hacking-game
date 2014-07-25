@@ -22,4 +22,4 @@ telnet 192.168.0.15 2160
 ~~~~
 
 ###TELNET SCREENSHOT###
-!(http://www.bitbucket.org/ridentbyte/fallout-hacking-game/telnetscreenshot.png)
+!(telnetscreenshot.png)
