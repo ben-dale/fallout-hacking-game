@@ -19,4 +19,4 @@ e.g.
 telnet 192.168.0.15 2160
 
 ###TELNET SCREENSHOT###
-(telnetscreenshot.png)
+![Alt text](telnetscreenshot.png)
