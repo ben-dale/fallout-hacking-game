@@ -78,17 +78,17 @@ func buildRound(attempts int, wordLength int, wordList []string) round {
  */
 func playRound(player *player, round round, connection net.Conn) {
 	printRoundHeader(connection)
-	printPossiblePasswords(round, connection)
+	printPossiblePasswords(round.possiblePasswords, connection)
 	for i := round.attemptsLeft; i > 0; i-- {
 		connection.Write([]byte("\n" + strconv.Itoa(i) + " ATTEMPT(S) LEFT")) // Print number of attempts left
 		connection.Write([]byte("\nENTER PASSWORD: "))
 		input := getUserInput(connection) // Get user's attempt
-		if isValidAttempt(input, round) && input == round.correctWord {
+		if isValidAttempt(input, round.possiblePasswords) && input == round.correctWord {
 			// User guess correctly.
 			player.score++
 			connection.Write([]byte("ACCESS GRANTED.\n"))
 			break
-		} else if isValidAttempt(input, round) {
+		} else if isValidAttempt(input, round.possiblePasswords) {
 			// User guessed incorrectly but was valid attempt
 			connection.Write([]byte("ENTRY DENIED. "))
 			connection.Write([]byte(strconv.Itoa(calculateNumberOfCorrectLetters(input, round.correctWord)) + "/" + strconv.Itoa(len(round.correctWord)) + " CORRECT.\n"))
@@ -123,8 +123,8 @@ func getUserInput(connection net.Conn) string {
 }
 
 // Returns true if attempt is in list of provided passwords
-func isValidAttempt(attempt string, round round) bool {
-	if stringArrayContains(attempt, round.possiblePasswords) {
+func isValidAttempt(attempt string, possiblePasswords []string) bool {
+	if stringArrayContains(attempt, possiblePasswords) {
 		return true
 	}
 	return false
@@ -138,9 +138,9 @@ func convertWordsToUpperCase(passwords []string) {
 }
 
 // Prints the all of the possible passwords within a given round
-func printPossiblePasswords(round round, connection net.Conn) {
-	for i := 0; i < len(round.possiblePasswords); i++ {
-		connection.Write([]byte(round.possiblePasswords[i] + "\n"))
+func printPossiblePasswords(possiblePasswords []string, connection net.Conn) {
+	for i := 0; i < len(possiblePasswords); i++ {
+		connection.Write([]byte(possiblePasswords[i] + "\n"))
 	}
 	connection.Write([]byte("\n----------------------------------------\n"))
 }

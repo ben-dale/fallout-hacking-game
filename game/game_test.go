@@ -32,7 +32,7 @@ func TestShouldReturnTrueIfWordExistsInGivenSlice(t *testing.T) {
 	slice := []string{"hello", "world"}
 
 	// When
-	result := wordListContains("hello", slice)
+	result := stringArrayContains("hello", slice)
 
 	// Then
 	assert.Equal(t, true, result, "Error. Should have returned true.")
@@ -43,7 +43,7 @@ func TestShouldReturnFalseIfWordDoesNotExistInGivenSlice(t *testing.T) {
 	slice := []string{"Hello", "World"}
 
 	// When
-	result := wordListContains("cards", slice)
+	result := stringArrayContains("cards", slice)
 
 	// Then
 	assert.Equal(t, false, result, "Error. Should have returned false.")
@@ -87,10 +87,10 @@ func TestShouldConvertAllLowercaseLettersInCollectionOfWordsToUpperCase(t *testi
 func TestShouldReturnFalseIfUserAttemptIsNotOneOfProvidedOptions(t *testing.T) {
 	// Given
 	attempt := "LAVEL"
-	options := []string{"HELLO", "RUBIX", "CRISP", "CREEP", "BIRDS", "SHEEP"}
+	possiblePasswords := []string{"HELLO", "RUBIX", "CRISP", "CREEP", "BIRDS", "SHEEP"}
 
 	// When
-	result := isValidAttempt(attempt, options)
+	result := isValidAttempt(attempt, possiblePasswords)
 
 	// Then
 	assert.Equal(t, false, result, "Error. Should have returened false as attempt is not in options.")
