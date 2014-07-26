@@ -78,7 +78,7 @@ func TestShouldConvertAllLowercaseLettersInCollectionOfWordsToUpperCase(t *testi
 	words := []string{"ben", "Dale"}
 
 	// When
-	convertStringsInSliceToUpperCase(words)
+	convertStringsToUpperCase(words)
 
 	// Then
 	assert.Equal(t, []string{"BEN", "DALE"}, words, "Error. Should have converted all words to uppercase.")
@@ -93,5 +93,36 @@ func TestShouldReturnFalseIfUserAttemptIsNotOneOfProvidedOptions(t *testing.T) {
 	result := isValidAttempt(attempt, possiblePasswords)
 
 	// Then
-	assert.Equal(t, false, result, "Error. Should have returened false as attempt is not in options.")
+	assert.Equal(t, false, result, "Error. Should have returened false as attempt is not one of the options.")
+}
+
+func TestShouldReturnTrueIfUserAttemptIsOneOfProvidedOptions(t *testing.T) {
+	// Given
+	attempt := "CAPCOM"
+	possiblePasswords := []string{"MARVEL", "CAPCOM"}
+
+	// When
+	result := isValidAttempt(attempt, possiblePasswords)
+
+	// Then
+	assert.Equal(t, true, result, "Error. Should have returned true as attempt is one of the options.")
+}
+
+func TestShouldBuildRoundWithFourAttemptsWithFivePasswordsWhichAreSevenCharactersLongWithOneCorrectPassword(t *testing.T) {
+	// Given
+	wordList := []string{"carpool", "ballboy", "primark", "footman", "vanhire", "yellow", "red", "green", "blue"}
+	attemptsPerRound := 4
+	lengthOfPasswords := 7
+	numberOfPasswords := 5
+
+	// When
+	round := buildRound(attemptsPerRound, lengthOfPasswords, numberOfPasswords, wordList)
+
+	// Then
+	assert.Equal(t, 4, round.attemptsLeft, "Error. Should have returned round with 4 attempts left.")
+	assert.NotEmpty(t, round.correctWord, "Error. Should have returned round with chosen correct password.")
+	assert.Equal(t, 5, len(round.possiblePasswords), "Error. Should have returned round with five passwords.")
+	for i := 0; i < len(round.possiblePasswords); i++ {
+		assert.Equal(t, 7, len(round.possiblePasswords[i]), "Error. Possible password is not correct length.")
+	}
 }

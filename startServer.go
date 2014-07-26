@@ -3,6 +3,7 @@ package main
 import (
 	"bitbucket.org/ridentbyte/fallout-hacking-game/game"
 	"fmt"
+	"log"
 	"net"
 	"os"
 )
@@ -15,12 +16,15 @@ func main() {
 	listener, err := net.ListenTCP(tcpAddr.Network(), tcpAddr)
 	checkError(err)
 
+	log.Println("Starting server on port", port)
+
 	for {
 		connection, err := listener.Accept()
 		if err != nil {
 			continue
 		}
-		go game.StartGame("dict.txt", connection)
+		log.Println("Client connected", connection.LocalAddr())
+		go game.StartGame("dict.txt", connection, 4, 7, 10)
 	}
 
 }

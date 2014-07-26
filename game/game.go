@@ -9,11 +9,6 @@ import (
 	"time"
 )
 
-const attemptsPerRound int = 4                            // Amount of attempts to guess the password the player has
-const lengthOfPassword int = 7                            // Length of the passwords
-const numberOfPasswords int = 10                          // Number of passwords to guess from
-const randomCharacters string = ";()[]*&^$.-=<>+#_!?@'/|" // Random characters to choose from when displaying passwords
-
 /**
  * Starts the game. Builds up a new player struct and round struct.
  * Sets the players score to 0.
@@ -22,14 +17,14 @@ const randomCharacters string = ";()[]*&^$.-=<>+#_!?@'/|" // Random characters t
  * At the end of each round, the player's score is printed to the console.
  * Connection is also passed in so data can be written back to the connecting client.
  */
-func StartGame(filename string, connection net.Conn) {
+func StartGame(filename string, connection net.Conn, attemptsPerRound int, lengthOfPasswords int, numberOfPasswords int) {
 	defer connection.Close()
 	wordList := loadStringsFromDisctionaryFile(filename)
 
 	player := player{0} // Setup new player
 
 	for {
-		round := buildRound(attemptsPerRound, lengthOfPassword, wordList)
+		round := buildRound(attemptsPerRound, lengthOfPasswords, numberOfPasswords, wordList)
 		playRound(&player, round, connection)
 		printPlayerScore(player, connection)
 		connection.Write([]byte("PLAY AGAIN? (Y/N): "))
@@ -54,12 +49,12 @@ func StartGame(filename string, connection net.Conn) {
  * to upper case and finally extracts one word at random to be the
  * right answer.
  */
-func buildRound(attempts int, wordLength int, wordList []string) round {
-	certainLengthWords := extractStringsOfLength(wordLength, wordList)
+func buildRound(attemptsPerRound int, lengthOfPasswords int, numberOfPasswords int, wordList []string) round {
+	certainLengthWords := extractStringsOfLength(lengthOfPasswords, wordList)
 	possiblePasswords := extractSubsetOfStringsAtRandom(numberOfPasswords, certainLengthWords)
-	convertStringsInSliceToUpperCase(possiblePasswords)
+	convertStringsToUpperCase(possiblePasswords)
 	correctWord := extractSubsetOfStringsAtRandom(1, possiblePasswords)[0]
-	return round{attempts, possiblePasswords, correctWord}
+	return round{attemptsPerRound, possiblePasswords, correctWord}
 }
 
 /**
@@ -106,7 +101,7 @@ func playRound(player *player, round round, connection net.Conn) {
 
 // Prints the player's score
 func printPlayerScore(player player, connection net.Conn) {
-	connection.Write([]byte("\nSCORE:" + strconv.Itoa(player.score) + "\n"))
+	connection.Write([]byte("\nSCORE:" + strconv.Itoa(player.score) + "\n\n"))
 }
 
 // Returns user attempt as a string
@@ -138,6 +133,7 @@ func printPossiblePasswords(possiblePasswords []string, connection net.Conn) {
 // Each password, when displayed, is surrounded by random characters.
 // Each word is surrounded by 10 characters
 func generateRandomCharacterStrings() (string, string) {
+	randomCharacters := ";()[]*&^$.-=<>+#_!?@'/|"
 	rand.Seed(time.Now().UnixNano())
 	noOfCharsToPrepend := rand.Intn(10)
 	noOfCharsToAppend := 10 - noOfCharsToPrepend
@@ -207,7 +203,7 @@ func stringSliceContains(word string, words []string) bool {
 }
 
 // Iterates over a string slice and converts all strings to uppercase
-func convertStringsInSliceToUpperCase(slice []string) {
+func convertStringsToUpperCase(slice []string) {
 	for i := 0; i < len(slice); i++ {
 		slice[i] = strings.ToUpper(slice[i])
 	}
