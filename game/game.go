@@ -26,12 +26,12 @@ func StartGame(filename string, connection net.Conn, attemptsPerRound int, lengt
 	for {
 		round := buildRound(attemptsPerRound, lengthOfPasswords, numberOfPasswords, wordList)
 		playRound(&player, round, connection)
-		printPlayerScore(player, connection)
+		player.writeScoreTo(connection)
 		connection.Write([]byte("PLAY AGAIN? (Y/N): "))
-		input := getUserInput(connection)
+		input := readUserInputFrom(connection)
 		if input != "Y" {
 			connection.Write([]byte("\nTHANKS FOR PLAYING!"))
-			printPlayerScore(player, connection)
+			player.writeScoreTo(connection)
 			break
 		}
 	}
@@ -73,15 +73,11 @@ func buildRound(attemptsPerRound int, lengthOfPasswords int, numberOfPasswords i
  * print ENTRY DENIED and print 0/n letters in correct place.
  */
 func playRound(player *player, round round, connection net.Conn) {
-	connection.Write([]byte("\n----------------------------------------\n"))
-	connection.Write([]byte("\nROBCO INDUSTRIES (TM) TERMALINK PROTOCOL\n"))
-	connection.Write([]byte("\nENTER PASSWORD NOW\n\n"))
-	printPossiblePasswords(round.possiblePasswords, connection)
-	connection.Write([]byte("\n----------------------------------------\n"))
+	round.writeRoundContentTo(connection)
 	for i := round.attemptsLeft; i > 0; i-- {
 		connection.Write([]byte("\n" + strconv.Itoa(i) + " ATTEMPT(S) LEFT")) // Print number of attempts left
 		connection.Write([]byte("\nENTER PASSWORD: "))
-		input := getUserInput(connection) // Get user's attempt
+		input := readUserInputFrom(connection) // read user's attempt
 		if isValidAttempt(input, round.possiblePasswords) && input == round.correctWord {
 			// User guess correctly.
 			player.score++
@@ -99,13 +95,8 @@ func playRound(player *player, round round, connection net.Conn) {
 	}
 }
 
-// Prints the player's score
-func printPlayerScore(player player, connection net.Conn) {
-	connection.Write([]byte("\nSCORE:" + strconv.Itoa(player.score) + "\n\n"))
-}
-
 // Returns user attempt as a string
-func getUserInput(connection net.Conn) string {
+func readUserInputFrom(connection net.Conn) string {
 	var input [512]byte
 	n, err := connection.Read(input[0:])
 	if err != nil {
@@ -120,14 +111,6 @@ func isValidAttempt(attempt string, possiblePasswords []string) bool {
 		return true
 	}
 	return false
-}
-
-// Prints the all of the possible passwords within a given round
-func printPossiblePasswords(possiblePasswords []string, connection net.Conn) {
-	for i := 0; i < len(possiblePasswords); i++ {
-		charsToPrepend, charsToAppend := generateRandomCharacterStrings()
-		connection.Write([]byte(charsToPrepend + possiblePasswords[i] + charsToAppend + "\n"))
-	}
 }
 
 // Each password, when displayed, is surrounded by random characters.
@@ -224,6 +207,28 @@ func loadStringsFromDisctionaryFile(filename string) []string {
 
 	return words
 
+}
+
+// Writes the round's content to the connection
+func (round round) writeRoundContentTo(connection net.Conn) {
+	connection.Write([]byte("\n----------------------------------------\n"))
+	connection.Write([]byte("\nROBCO INDUSTRIES (TM) TERMALINK PROTOCOL\n"))
+	connection.Write([]byte("\nENTER PASSWORD NOW\n\n"))
+	round.writePossiblePasswordsTo(connection)
+	connection.Write([]byte("\n----------------------------------------\n"))
+}
+
+// Writes the all of the possible passwords to connection
+func (round round) writePossiblePasswordsTo(connection net.Conn) {
+	for i := 0; i < len(round.possiblePasswords); i++ {
+		charsToPrepend, charsToAppend := generateRandomCharacterStrings()
+		connection.Write([]byte(charsToPrepend + round.possiblePasswords[i] + charsToAppend + "\n"))
+	}
+}
+
+// Prints the player's score
+func (player player) writeScoreTo(connection net.Conn) {
+	connection.Write([]byte("\nSCORE:" + strconv.Itoa(player.score) + "\n\n"))
 }
 
 type player struct {
